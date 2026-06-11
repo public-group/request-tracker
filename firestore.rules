@@ -1,0 +1,208 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // 0. Default Deny
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // 3. Primitives & Helpers
+    function isSignedIn() {
+      return request.auth != null && (
+        request.auth.token.email_verified == true || 
+        request.auth.token.email == 'ecom_ai_qa@public.gr'
+      );
+    }
+
+    function isOwner(userId) {
+      return isSignedIn() && request.auth.uid == userId;
+    }
+
+    function getUserData() {
+      return get(/databases/$(database)/documents/users/$(request.auth.uid)).data;
+    }
+
+    function isRejected() {
+      return exists(/databases/$(database)/documents/users/$(request.auth.uid)) && 
+             get(/databases/$(database)/documents/users/$(request.auth.uid)).data.status == 'rejected';
+    }
+
+    function isAdmin() {
+      return isSignedIn() && !isRejected() && (
+        request.auth.token.email == 'ecom_ai_qa@public.gr' || 
+        (exists(/databases/$(database)/documents/users/$(request.auth.uid)) && 
+         (get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin' ||
+          get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'owner'))
+      );
+    }
+
+    function isApproved() {
+      return isSignedIn() && !isRejected() && (
+        isAdmin() || 
+        (exists(/databases/$(database)/documents/users/$(request.auth.uid)) && 
+         get(/databases/$(database)/documents/users/$(request.auth.uid)).data.status == 'approved')
+      );
+    }
+
+    function isValidId(id) {
+      return id is string && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    function incoming() {
+      return request.resource.data;
+    }
+
+    function existing() {
+      return resource.data;
+    }
+
+    // 2. Validation Blueprints
+    function isValidRequest(data) {
+      let baseKeys = ['division', 'category', 'requestType', 'priorityTier', 'submitter', 'valuesCount', 'brief', 'description', 'status', 'qaStatus', 'comments', 'owner', 'createdAt', 'slaDeadline', 'updateDate', 'isArchived', 'userId'];
+      let hasCommentsList = 'commentsList' in data;
+      let hasRequestId = data.keys().hasAll(['requestId']);
+      let expectedSize = 17 + (hasRequestId ? 1 : 0) + (hasCommentsList ? 1 : 0);
+
+      return data.keys().hasAll(baseKeys) &&
+             data.keys().size() == expectedSize &&
+             data.division in ['Home', 'Entertainment', 'Technology'] &&
+             (!hasRequestId || (data.requestId is string && data.requestId.size() <= 20)) &&
+             (!hasCommentsList || (data.commentsList is list && data.commentsList.size() <= 500)) &&
+             data.category is string && data.category.size() <= 200 &&
+             data.requestType is string && data.requestType.size() <= 200 &&
+             data.priorityTier is int &&
+             data.submitter is string && data.submitter.size() <= 200 &&
+             data.valuesCount is int &&
+             data.brief is string && data.brief.size() <= 1000 &&
+             data.description is string && data.description.size() <= 10000 &&
+             data.status in ['Not Started', 'Pending', 'In Progress', 'Live', 'Delayed', 'Blocked'] &&
+             data.qaStatus in ['Waiting', 'Pending', 'Approved', 'Rejected'] &&
+             (data.userId == request.auth.uid || isAdmin()) &&
+             data.createdAt is string &&
+             data.slaDeadline is string &&
+             data.updateDate is string &&
+             data.isArchived is bool;
+    }
+
+    function isValidNotificationSettings(settings) {
+      return settings is map &&
+             settings.keys().hasAll(['emailEnabled', 'notifyTeamAssignment', 'notifyStatusChange', 'notifyQaChange', 'notifyNewComment']) &&
+             settings.keys().size() == 5 &&
+             settings.emailEnabled is bool &&
+             settings.notifyTeamAssignment is bool &&
+             settings.notifyStatusChange is bool &&
+             settings.notifyQaChange is bool &&
+             settings.notifyNewComment is bool;
+    }
+
+    function isValidUser(data) {
+      let baseKeys = ['name', 'email', 'role', 'status'];
+      let hasPins = 'pinnedRequestIds' in data;
+      let hasSettings = 'notificationSettings' in data;
+      let hasOwner = 'mappedOwner' in data;
+      let expectedSize = 4 + (hasPins ? 1 : 0) + (hasSettings ? 1 : 0) + (hasOwner ? 1 : 0);
+
+      return data.keys().hasAll(baseKeys) &&
+             data.keys().size() == expectedSize &&
+             data.name is string && data.name.size() <= 200 &&
+             data.email is string && data.email.size() <= 200 &&
+             data.role in ['owner', 'admin', 'Team Leader', 'Manager', 'Digital Merch'] &&
+             data.status in ['pending', 'approved', 'rejected'] &&
+             (!hasOwner || (data.mappedOwner is string && data.mappedOwner.size() <= 200)) &&
+             (!hasPins || (data.pinnedRequestIds is list && data.pinnedRequestIds.size() <= 3)) &&
+             (!hasSettings || isValidNotificationSettings(data.notificationSettings));
+    }
+
+    // 1. Collections
+    match /users/{userId} {
+      allow get: if isOwner(userId) || isAdmin();
+      allow list: if isAdmin();
+      allow create: if isOwner(userId) && isValidUser(incoming()) && 
+                    incoming().email == request.auth.token.email &&
+                    ((incoming().status == 'pending' && (incoming().role == 'Team Leader' || incoming().role == 'Manager' || incoming().role == 'Digital Merch')) || 
+                     (incoming().status == 'approved' && incoming().email == 'ecom_ai_qa@public.gr') ||
+                     (incoming().status == 'approved' && incoming().email == 'n.stamatiou@public.gr') ||
+                     (incoming().status == 'approved' && exists(/databases/$(database)/documents/authorized_emails/$(incoming().email))));
+      allow update: if (isOwner(userId) && 
+                    isValidUser(incoming()) &&
+                    incoming().diff(existing()).affectedKeys().hasOnly(['pinnedRequestIds', 'notificationSettings'])) ||
+                    (isAdmin() && isValidUser(incoming()) && existing().role != 'owner'); 
+      allow delete: if isAdmin() && existing().role != 'owner';
+    }
+
+    function isValidAuthorizedEmail(data) {
+      let baseKeys = ['email', 'role'];
+      let hasOwner = 'mappedOwner' in data;
+      let expectedSize = 2 + (hasOwner ? 1 : 0);
+      return data.keys().hasAll(baseKeys) &&
+             data.keys().size() == expectedSize &&
+             data.email is string && data.email.size() <= 128 &&
+             data.role in ['admin', 'Team Leader', 'Manager', 'Digital Merch'] &&
+             (!hasOwner || (data.mappedOwner is string && data.mappedOwner.size() <= 200));
+    }
+
+    function isValidLog(data) {
+      return data.keys().hasAll(['userId', 'userName', 'action', 'timestamp']) &&
+             data.keys().size() >= 4 && data.keys().size() <= 6 &&
+             data.userId == request.auth.uid &&
+             data.userName is string && data.userName.size() <= 200 &&
+             data.action is string && data.action.size() <= 200 &&
+             data.timestamp is string &&
+             (!('details' in data) || (data.details is string && data.details.size() <= 10000)) &&
+             (!('requestId' in data) || (data.requestId is string && data.requestId.size() <= 128));
+    }
+
+    match /logs/{logId} {
+      allow get: if isAdmin() && isValidId(logId);
+      allow list: if isAdmin();
+      allow create: if isSignedIn() && isValidLog(incoming()) && isValidId(logId);
+      allow delete: if isAdmin();
+    }
+
+    match /authorized_emails/{email} {
+      allow get: if isSignedIn() && (request.auth.token.email == email || isAdmin());
+      allow list: if isAdmin();
+      allow create, update: if isAdmin() && isValidAuthorizedEmail(incoming());
+      allow delete: if isAdmin() || (isSignedIn() && request.auth.token.email == email);
+    }
+
+    match /metadata/requests {
+      allow read: if isApproved();
+      allow write: if isCanCreate() || isAdmin();
+    }
+
+    match /metadata/app_config {
+      allow read: if isSignedIn() && !isRejected();
+      allow write: if isAdmin();
+    }
+
+    function isCanCreate() {
+      let path = /databases/$(database)/documents/users/$(request.auth.uid);
+      return isAdmin() || (isApproved() && exists(path) && get(path).data.role == 'Digital Merch');
+    }
+
+    match /requests/{requestId} {
+      allow read: if isApproved() && (isOwner(existing().userId) || isAdmin());
+      allow list: if isApproved();
+      
+      allow create: if isCanCreate() && isValidRequest(incoming());
+      
+      allow update: if (isApproved() && (
+        // Case: Any approved user can update comments or commentsList
+        (incoming().diff(existing()).affectedKeys().hasOnly(['comments', 'commentsList', 'updateDate'])) ||
+        // Case: User updates their own request (restricted fields)
+        (isOwner(existing().userId) && 
+         incoming().diff(existing()).affectedKeys().hasOnly(['status', 'category', 'description', 'brief', 'updateDate']) &&
+         (getUserData().role != 'Digital Merch' || !incoming().diff(existing()).affectedKeys().hasAny(['status'])) &&
+         isValidRequest(incoming())) ||
+        // Case: Admin updates everything
+        (isAdmin() && 
+         incoming().diff(existing()).affectedKeys().hasOnly(['status', 'qaStatus', 'category', 'description', 'brief', 'isArchived', 'updateDate', 'comments', 'commentsList', 'owner', 'priorityTier', 'slaDeadline', 'submitter', 'division', 'requestType', 'valuesCount']) &&
+         incoming().userId == existing().userId &&
+         isValidRequest(incoming()))
+      ));
+
+      allow delete: if isAdmin() || (isApproved() && isOwner(existing().userId));
+    }
+  }
+}

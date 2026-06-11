@@ -1,0 +1,46 @@
+export type Division = 'Home' | 'Entertainment' | 'Technology';
+
+export type RequestStatus = 'Not Started' | 'In Progress' | 'Live' | 'Delayed' | 'Blocked';
+export type QAStatus = 'Waiting' | 'Pending' | 'Approved' | 'Rejected';
+
+export interface RequestComment {
+  id: string;
+  text: string;
+  author: string;
+  timestamp: string;
+  userId: string;
+}
+
+export interface Request {
+  id: string;
+  requestId?: string;
+  division: Division;
+  category: string;
+  requestType: string;
+  priorityTier: number;
+  submitter: string;
+  valuesCount: number;
+  brief: string; // URL
+  description: string;
+  status: RequestStatus;
+  qaStatus: QAStatus;
+  comments: string;
+  commentsList?: RequestComment[];
+  owner: string;
+  createdAt: string; // ISO string
+  slaDeadline: string; // ISO string
+  updateDate: string; // ISO string
+  isArchived: boolean;
+}
+
+export interface Config {
+  OWNERS: Record<Division, string>;
+  REQUEST_TYPES: string[];
+  PRIORITY_MAP: Record<string, number>;
+  HOLIDAYS: string[];
+  CAPACITY_MAP: Record<string, Record<number, number>>;
+  OWNERS_LIST?: string[];
+  SUBMITTERS_LIST?: string[];
+  ROLES_LIST?: string[];
+  ROLE_PERMISSIONS?: Record<string, string[]>;
+}

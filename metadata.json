@@ -1,0 +1,6 @@
+{
+  "name": "Nexus Request System",
+  "description": "A modern, standalone request management platform with intelligent SLA tracking, dynamic assignment, and real-time analytics.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

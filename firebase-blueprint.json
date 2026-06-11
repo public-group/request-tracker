@@ -1,0 +1,147 @@
+{
+  "entities": {
+    "Request": {
+      "title": "Request",
+      "description": "Enterprise project request details",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "division": { "type": "string", "enum": ["Home", "Entertainment", "Technology"] },
+        "category": { "type": "string" },
+        "requestType": { "type": "string" },
+        "priorityTier": { "type": "integer" },
+        "submitter": { "type": "string" },
+        "valuesCount": { "type": "integer" },
+        "brief": { "type": "string", "format": "uri" },
+        "description": { "type": "string" },
+        "status": { "type": "string", "enum": ["Not Started", "In Progress", "Live", "Delayed", "Blocked"] },
+        "qaStatus": { "type": "string", "enum": ["Waiting", "Pending", "Approved", "Rejected"] },
+        "comments": { "type": "string" },
+        "commentsList": { 
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "id": { "type": "string" },
+              "text": { "type": "string" },
+              "author": { "type": "string" },
+              "timestamp": { "type": "string", "format": "date-time" },
+              "userId": { "type": "string" }
+            }
+          }
+        },
+        "requestId": { "type": "string" },
+        "owner": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "slaDeadline": { "type": "string", "format": "date-time" },
+        "updateDate": { "type": "string", "format": "date-time" },
+        "isArchived": { "type": "boolean" },
+        "userId": { "type": "string" }
+      },
+      "required": ["division", "category", "requestType", "submitter", "brief", "description", "status", "qaStatus", "userId"]
+    },
+    "User": {
+      "title": "User",
+      "description": "User profile information with access control",
+      "type": "object",
+      "properties": {
+        "name": { "type": "string" },
+        "email": { "type": "string", "format": "email" },
+        "role": { "type": "string", "enum": ["admin", "Team Leader", "Manager", "Digital Merch"] },
+        "status": { "type": "string", "enum": ["pending", "approved", "rejected"] },
+        "mappedOwner": { "type": "string" },
+        "pinnedRequestIds": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "notificationSettings": {
+          "type": "object",
+          "properties": {
+            "emailEnabled": { "type": "boolean" },
+            "notifyTeamAssignment": { "type": "boolean" },
+            "notifyStatusChange": { "type": "boolean" },
+            "notifyQaChange": { "type": "boolean" },
+            "notifyNewComment": { "type": "boolean" }
+          },
+          "required": ["emailEnabled", "notifyTeamAssignment", "notifyStatusChange", "notifyQaChange", "notifyNewComment"]
+        }
+      },
+      "required": ["name", "email", "role", "status"]
+    },
+    "AuthorizedEmail": {
+      "title": "AuthorizedEmail",
+      "description": "Pre-authorized user emails and roles",
+      "type": "object",
+      "properties": {
+        "email": { "type": "string", "format": "email" },
+        "role": { "type": "string", "enum": ["admin", "Team Leader", "Manager", "Digital Merch"] }
+      },
+      "required": ["email", "role"]
+    },
+    "Log": {
+      "title": "Activity Log",
+      "description": "System-wide activity logs",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string" },
+        "userName": { "type": "string" },
+        "action": { "type": "string" },
+        "timestamp": { "type": "string", "format": "date-time" },
+        "details": { "type": "string" },
+        "requestId": { "type": "string" }
+      },
+      "required": ["userId", "userName", "action", "timestamp"]
+    },
+    "AppConfig": {
+      "title": "AppConfig",
+      "description": "Dynamic configurations for divisions, categories, request types, ownership, and capacities",
+      "type": "object",
+      "properties": {
+        "OWNERS": {
+          "type": "object",
+          "description": "Map of division names to owner names"
+        },
+        "REQUEST_TYPES": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "List of allowed request types"
+        },
+        "PRIORITY_MAP": {
+          "type": "object",
+          "description": "Map of request types to their default priority tiers"
+        },
+        "CAPACITY_MAP": {
+          "type": "object",
+          "description": "Map of category names to their priority tier capacities"
+        },
+        "DIVISION_CATEGORIES": {
+          "type": "object",
+          "description": "Map of division names to lists of category names"
+        }
+      },
+      "required": ["OWNERS", "REQUEST_TYPES", "PRIORITY_MAP", "CAPACITY_MAP", "DIVISION_CATEGORIES"]
+    }
+  },
+  "firestore": {
+    "/requests/{requestId}": {
+      "schema": "Request",
+      "description": "Collection of project requests"
+    },
+    "/users/{userId}": {
+      "schema": "User",
+      "description": "User profiles and access status"
+    },
+    "/authorized_emails/{email}": {
+      "schema": "AuthorizedEmail",
+      "description": "Pre-authorized access list"
+    },
+    "/logs/{logId}": {
+      "schema": "Log",
+      "description": "System activity logs"
+    },
+    "/metadata/app_config": {
+      "schema": "AppConfig",
+      "description": "Collection containing dynamic application settings and capacities"
+    }
+  }
+}

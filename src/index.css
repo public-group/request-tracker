@@ -1,0 +1,61 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;700&display=swap');
+@import "tailwindcss";
+
+@theme {
+  --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, monospace;
+  
+  --color-dark-950: #2d2e32;
+  --color-dark-900: #38393e;
+  --color-dark-800: #45464d;
+  --color-dark-700: #5a5b63;
+  --color-dark-600: #7b7c84;
+}
+
+@layer base {
+  body {
+    @apply antialiased selection:bg-[#FE5900] selection:text-white transition-colors duration-300;
+  }
+  
+  select {
+    @apply appearance-none bg-no-repeat;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%23FE5900' stroke-width='2'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E");
+    background-position: right 0.75rem center;
+    background-size: 1rem;
+  }
+}
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+::-webkit-scrollbar-track {
+  @apply bg-transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  @apply bg-gray-200 rounded-full border-[3px] border-transparent bg-clip-padding hover:bg-[#FE5900]/40 transition-colors;
+}
+
+.dark ::-webkit-scrollbar-thumb {
+  @apply bg-dark-700 hover:bg-[#FE5900]/40;
+}
+
+::-webkit-scrollbar-thumb:active {
+  @apply bg-[#FE5900];
+}
+
+/* Glass effect utilities */
+.glass-morphism {
+  @apply bg-white/70 backdrop-blur-xl border border-white/20;
+}
+
+.dark-glass {
+  @apply bg-dark-900/80 backdrop-blur-xl border border-white/5;
+}
+
+.dark-card {
+  @apply bg-dark-900 border-dark-800 hover:border-dark-700 transition-all duration-300 shadow-2xl shadow-black/20;
+}
