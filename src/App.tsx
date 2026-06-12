@@ -1370,22 +1370,28 @@ export default function App() {
       // Admin subscriptions
       let unsubscribeUsers: (() => void) | undefined;
       let unsubscribeAuthEmails: (() => void) | undefined;
-      let unsubscribeLogs: (() => void) | undefined;
       if (isAdmin || isActuallyAdmin) {
         unsubscribeUsers = firebaseService.subscribeUsers(setUsers);
         unsubscribeAuthEmails = firebaseService.subscribeAuthorizedEmails(setAuthEmails);
-        unsubscribeLogs = firebaseService.subscribeLogs(setLogs as any);
       }
-      
+
       return () => {
         if (unsubscribeRequests) unsubscribeRequests();
         if (unsubscribeAppConfig) unsubscribeAppConfig();
         if (unsubscribeUsers) unsubscribeUsers();
         if (unsubscribeAuthEmails) unsubscribeAuthEmails();
-        if (unsubscribeLogs) unsubscribeLogs();
       };
     }
-  }, [user, userStatus, isActuallyAdmin]);
+  }, [user?.id, userStatus, isActuallyAdmin, isAdmin]);
+
+  // Logs are heavy and unbounded: only subscribe while the admin is actually
+  // viewing the logs tab, and rely on the limit()-capped query in the service.
+  useEffect(() => {
+    if ((isAdmin || isActuallyAdmin) && activeTab === 'logs') {
+      const unsubscribeLogs = firebaseService.subscribeLogs(setLogs as any);
+      return () => unsubscribeLogs();
+    }
+  }, [isAdmin, isActuallyAdmin, activeTab]);
 
   // Auto-switch overdue tasks to DELAYED
   useEffect(() => {

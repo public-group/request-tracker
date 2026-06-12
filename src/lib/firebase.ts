@@ -1,10 +1,30 @@
 import { initializeApp } from 'firebase/app';
 import { getAuth } from 'firebase/auth';
-import { getFirestore, doc, getDocFromServer } from 'firebase/firestore';
+import {
+  initializeFirestore,
+  persistentLocalCache,
+  persistentMultipleTabManager,
+  doc,
+  getDocFromServer,
+} from 'firebase/firestore';
 import firebaseConfig from '../../firebase-applet-config.json';
 
 const app = initializeApp(firebaseConfig);
-export const db = getFirestore(app, (firebaseConfig as any).firestoreDatabaseId); /* CRITICAL: The app will break without this line */
+
+// Use a persistent (IndexedDB) local cache so that unchanged documents are
+// served locally instead of being re-read from the server on every reload /
+// re-subscription. This drastically cuts Firestore document reads and keeps the
+// project under the free-tier daily read quota.
+// NOTE: the database id MUST be passed through, the app will break without it.
+export const db = initializeFirestore(
+  app,
+  {
+    localCache: persistentLocalCache({
+      tabManager: persistentMultipleTabManager(),
+    }),
+  },
+  (firebaseConfig as any).firestoreDatabaseId,
+);
 export const auth = getAuth(app);
 
 // Connectivity check

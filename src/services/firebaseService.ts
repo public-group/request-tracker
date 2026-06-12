@@ -5,9 +5,10 @@ import {
   deleteDoc, 
   doc, 
   getDocs, 
-  query, 
-  where, 
-  orderBy, 
+  query,
+  where,
+  orderBy,
+  limit,
   onSnapshot,
   Timestamp,
   getDoc,
@@ -387,10 +388,10 @@ export const firebaseService = {
     }
   },
 
-  async getLogs(): Promise<any[]> {
+  async getLogs(max: number = 200): Promise<any[]> {
     const path = 'logs';
     try {
-      const q = query(collection(db, path), orderBy('timestamp', 'desc'));
+      const q = query(collection(db, path), orderBy('timestamp', 'desc'), limit(max));
       const snapshot = await getDocs(q);
       return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
     } catch (error) {
@@ -399,10 +400,10 @@ export const firebaseService = {
     }
   },
 
-  subscribeLogs(callback: (logs: any[]) => void) {
+  subscribeLogs(callback: (logs: any[]) => void, max: number = 200) {
     const path = 'logs';
-    const q = query(collection(db, path), orderBy('timestamp', 'desc'));
-    
+    const q = query(collection(db, path), orderBy('timestamp', 'desc'), limit(max));
+
     return onSnapshot(q, (snapshot) => {
       const logs = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
       callback(logs);
