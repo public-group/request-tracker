@@ -36,6 +36,8 @@
         "slaDeadline": { "type": "string", "format": "date-time" },
         "updateDate": { "type": "string", "format": "date-time" },
         "isArchived": { "type": "boolean" },
+        "subtaskRequestActions": { "type": "boolean", "description": "Fixed per-request subtask: Request Actions" },
+        "subtaskLockedValuelist": { "type": "boolean", "description": "Fixed per-request subtask: Locked Valuelist" },
         "userId": { "type": "string" }
       },
       "required": ["division", "category", "requestType", "submitter", "brief", "description", "status", "qaStatus", "userId"]

@@ -31,7 +31,17 @@ export interface Request {
   slaDeadline: string; // ISO string
   updateDate: string; // ISO string
   isArchived: boolean;
+  // Fixed per-request subtasks (same two for every request)
+  subtaskRequestActions?: boolean;
+  subtaskLockedValuelist?: boolean;
 }
+
+export type RequestSubtaskKey = 'subtaskRequestActions' | 'subtaskLockedValuelist';
+
+export const REQUEST_SUBTASKS: { key: RequestSubtaskKey; label: string }[] = [
+  { key: 'subtaskRequestActions', label: 'Request Actions' },
+  { key: 'subtaskLockedValuelist', label: 'Locked Valuelist' },
+];
 
 export interface Config {
   OWNERS: Record<Division, string>;

@@ -61,10 +61,14 @@ service cloud.firestore {
       let baseKeys = ['division', 'category', 'requestType', 'priorityTier', 'submitter', 'valuesCount', 'brief', 'description', 'status', 'qaStatus', 'comments', 'owner', 'createdAt', 'slaDeadline', 'updateDate', 'isArchived', 'userId'];
       let hasCommentsList = 'commentsList' in data;
       let hasRequestId = data.keys().hasAll(['requestId']);
-      let expectedSize = 17 + (hasRequestId ? 1 : 0) + (hasCommentsList ? 1 : 0);
+      let hasSubtaskRA = 'subtaskRequestActions' in data;
+      let hasSubtaskLV = 'subtaskLockedValuelist' in data;
+      let expectedSize = 17 + (hasRequestId ? 1 : 0) + (hasCommentsList ? 1 : 0) + (hasSubtaskRA ? 1 : 0) + (hasSubtaskLV ? 1 : 0);
 
       return data.keys().hasAll(baseKeys) &&
              data.keys().size() == expectedSize &&
+             (!hasSubtaskRA || data.subtaskRequestActions is bool) &&
+             (!hasSubtaskLV || data.subtaskLockedValuelist is bool) &&
              data.division in ['Home', 'Entertainment', 'Technology'] &&
              (!hasRequestId || (data.requestId is string && data.requestId.size() <= 20)) &&
              (!hasCommentsList || (data.commentsList is list && data.commentsList.size() <= 500)) &&
@@ -190,14 +194,17 @@ service cloud.firestore {
       allow update: if (isApproved() && (
         // Case: Any approved user can update comments or commentsList
         (incoming().diff(existing()).affectedKeys().hasOnly(['comments', 'commentsList', 'updateDate'])) ||
+        // Case: Any approved user can toggle the fixed per-request subtasks
+        (incoming().diff(existing()).affectedKeys().hasOnly(['subtaskRequestActions', 'subtaskLockedValuelist', 'updateDate']) &&
+         isValidRequest(incoming())) ||
         // Case: User updates their own request (restricted fields)
-        (isOwner(existing().userId) && 
-         incoming().diff(existing()).affectedKeys().hasOnly(['status', 'category', 'description', 'brief', 'updateDate']) &&
+        (isOwner(existing().userId) &&
+         incoming().diff(existing()).affectedKeys().hasOnly(['status', 'category', 'description', 'brief', 'updateDate', 'subtaskRequestActions', 'subtaskLockedValuelist']) &&
          (getUserData().role != 'Digital Merch' || !incoming().diff(existing()).affectedKeys().hasAny(['status'])) &&
          isValidRequest(incoming())) ||
         // Case: Admin updates everything
-        (isAdmin() && 
-         incoming().diff(existing()).affectedKeys().hasOnly(['status', 'qaStatus', 'category', 'description', 'brief', 'isArchived', 'updateDate', 'comments', 'commentsList', 'owner', 'priorityTier', 'slaDeadline', 'submitter', 'division', 'requestType', 'valuesCount']) &&
+        (isAdmin() &&
+         incoming().diff(existing()).affectedKeys().hasOnly(['status', 'qaStatus', 'category', 'description', 'brief', 'isArchived', 'updateDate', 'comments', 'commentsList', 'owner', 'priorityTier', 'slaDeadline', 'submitter', 'division', 'requestType', 'valuesCount', 'subtaskRequestActions', 'subtaskLockedValuelist']) &&
          incoming().userId == existing().userId &&
          isValidRequest(incoming()))
       ));
