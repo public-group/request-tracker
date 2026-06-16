@@ -66,7 +66,7 @@ import {
 import { auth } from './lib/firebase';
 import { firebaseService } from './services/firebaseService';
 import { notificationService } from './services/notificationService';
-import { Request, Division, RequestStatus, QAStatus, RequestComment, Config } from './types';
+import { Request, Division, RequestStatus, QAStatus, RequestComment, Config, RequestSubtaskKey, REQUEST_SUBTASKS } from './types';
 import ConfigManagementView from './components/ConfigManagementView';
 import { APP_CONFIG, BRAND_COLORS, DIVISION_CATEGORIES } from './constants';
 import { calculateSLA } from './lib/sla';
@@ -1599,7 +1599,9 @@ export default function App() {
       isArchived: false,
       status: 'Not Started',
       qaStatus: 'Waiting',
-      comments: ''
+      comments: '',
+      subtaskRequestActions: false,
+      subtaskLockedValuelist: false
     };
 
     try {
@@ -3966,7 +3968,60 @@ function CreateRequestForm({
   );
 }
 
-function RequestListView({ 
+// Fixed two-item subtask checklist shown on every request (list rows + modals).
+function SubtaskChecks({
+  request,
+  onToggle,
+  disabled = false,
+  isDarkMode = false,
+  compact = false,
+}: {
+  request: Request,
+  onToggle: (key: RequestSubtaskKey, value: boolean) => void,
+  disabled?: boolean,
+  isDarkMode?: boolean,
+  compact?: boolean,
+}) {
+  return (
+    <div className={`flex flex-col ${compact ? 'gap-1' : 'gap-2'}`}>
+      {REQUEST_SUBTASKS.map(({ key, label }) => {
+        const checked = !!request[key];
+        return (
+          <label
+            key={key}
+            title={disabled ? 'Locked' : (checked ? `Mark "${label}" as not done` : `Mark "${label}" as done`)}
+            className={`flex items-center gap-2 select-none ${disabled ? 'cursor-default' : 'cursor-pointer'}`}
+          >
+            <button
+              type="button"
+              disabled={disabled}
+              onClick={(e) => { e.stopPropagation(); if (!disabled) onToggle(key, !checked); }}
+              aria-pressed={checked}
+              className={`flex items-center justify-center rounded-md border transition-all shrink-0 ${compact ? 'w-4 h-4' : 'w-5 h-5'} ${
+                checked
+                  ? 'bg-[#FE5900] border-[#FE5900] text-white shadow-[0_0_8px_rgba(254,89,0,0.25)]'
+                  : isDarkMode
+                    ? 'bg-dark-800 border-dark-700 text-transparent'
+                    : 'bg-white border-gray-300 text-transparent'
+              } ${disabled ? 'opacity-60' : 'cursor-pointer hover:border-[#FE5900]/60'}`}
+            >
+              <Check size={compact ? 11 : 13} strokeWidth={3.5} />
+            </button>
+            <span className={`font-bold tracking-tight whitespace-nowrap ${compact ? 'text-[10px]' : 'text-xs'} ${
+              checked
+                ? (isDarkMode ? 'text-gray-200' : 'text-gray-700')
+                : 'text-gray-400'
+            }`}>
+              {label}
+            </span>
+          </label>
+        );
+      })}
+    </div>
+  );
+}
+
+function RequestListView({
   requests, 
   isAdmin, 
   userRole,
@@ -4289,6 +4344,7 @@ function RequestListView({
                     )}
                   </div>
                 </th>
+                <th className={compactView ? "px-6 py-2 font-bold" : "px-6 py-3 font-bold"}>Subtasks</th>
                 <th className={compactView ? "px-6 py-2 font-bold" : "px-6 py-3 font-bold"}>Status</th>
                 <th className={compactView ? "px-6 py-2 font-bold" : "px-6 py-3 font-bold"}>QA</th>
                 <th className={compactView ? "px-6 py-2 font-bold text-center" : "px-6 py-3 font-bold text-center"}>Comments</th>
@@ -4338,6 +4394,14 @@ function RequestListView({
                       </div>
                     </td>
 
+                    {/* Subtasks Column */}
+                    <td className={compactView ? "px-6 py-2" : "px-6 py-4"}>
+                      <div className="space-y-2 py-1">
+                        <div className={`h-4 w-28 rounded animate-pulse ${isDarkMode ? 'bg-dark-800' : 'bg-gray-200'}`} />
+                        <div className={`h-4 w-28 rounded animate-pulse ${isDarkMode ? 'bg-dark-800' : 'bg-gray-200'}`} />
+                      </div>
+                    </td>
+
                     {/* Status Column */}
                     <td className={compactView ? "px-6 py-2" : "px-6 py-4"}>
                       <div className={`h-6 w-24 rounded-full animate-pulse ${isDarkMode ? 'bg-dark-800' : 'bg-gray-200'}`} />
@@ -4379,7 +4443,7 @@ function RequestListView({
                 ))
               ) : filteredRequests.length === 0 ? (
                 <tr>
-                  <td colSpan={isAdmin ? 8 : 7} className="px-6 py-12 text-center text-gray-400 italic font-medium">
+                  <td colSpan={isAdmin ? 9 : 8} className="px-6 py-12 text-center text-gray-400 italic font-medium">
                     No requests found matching your filters
                   </td>
                 </tr>
@@ -4467,6 +4531,16 @@ function RequestListView({
                              {!compactView && <span className="text-[10px] text-gray-500 font-medium whitespace-nowrap">by {request.submitter}</span>}
                           </div>
                         </div>
+                      </td>
+
+                      <td className={compactView ? "px-6 py-2" : "px-6 py-4"}>
+                        <SubtaskChecks
+                          request={request}
+                          isDarkMode={isDarkMode}
+                          compact={compactView}
+                          disabled={request.isArchived ? true : !hasPermission(userRole, 'update_flow_status', appConfig)}
+                          onToggle={(key, value) => onUpdateRequest({ ...request, [key]: value })}
+                        />
                       </td>
 
                       <td className={compactView ? "px-6 py-2" : "px-6 py-4"}>
@@ -4867,6 +4941,20 @@ function EditRequestModal({
 
           <div className="space-y-2">
             <label className="text-[10px] font-black uppercase tracking-widest text-gray-400 flex items-center gap-2 mb-2">
+              <ListTodo size={12} />
+              Subtasks
+            </label>
+            <div className={`p-4 rounded-2xl border ${isDarkMode ? 'bg-dark-800 border-dark-700' : 'bg-gray-50 border-gray-100'}`}>
+              <SubtaskChecks
+                request={formData}
+                isDarkMode={isDarkMode}
+                onToggle={(key, value) => setFormData({ ...formData, [key]: value })}
+              />
+            </div>
+          </div>
+
+          <div className="space-y-2">
+            <label className="text-[10px] font-black uppercase tracking-widest text-gray-400 flex items-center gap-2 mb-2">
               <MessageSquare size={12} />
               Comments / Discussion
             </label>
@@ -5063,6 +5151,13 @@ function ViewRequestModal({
                    ]}
                  />
               </div>
+            </div>
+          </div>
+
+          <div className="space-y-1">
+            <span className="text-[10px] font-black uppercase tracking-widest text-gray-400 block px-1">Subtasks</span>
+            <div className={`p-4 rounded-2xl border ${isDarkMode ? 'bg-dark-800/60 border-dark-750' : 'bg-gray-50/50 border-gray-100'}`}>
+              <SubtaskChecks request={request} isDarkMode={isDarkMode} disabled onToggle={() => {}} />
             </div>
           </div>
 
