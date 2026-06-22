@@ -4187,7 +4187,7 @@ function RequestListView({
           <h2 className={`text-2xl font-bold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>{isArchiveView ? 'Archived Records' : 'Requests'}</h2>
           <div className={`flex items-center gap-1.5 text-xs ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>
             <Info size={14} className="text-[#FE5900]" />
-            <span>Double-click any row to view details</span>
+            <span>Click any row to view details</span>
           </div>
         </div>
         <div className="flex flex-wrap gap-3">
