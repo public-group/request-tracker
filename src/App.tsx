@@ -4466,7 +4466,7 @@ function RequestListView({
                   return (
                     <tr 
                       key={request.id} 
-                      onDoubleClick={(e) => {
+                      onClick={(e) => {
                         const target = e.target as HTMLElement;
                         if (target.closest('button') || target.closest('select') || target.closest('input') || target.closest('a') || target.closest('label')) {
                           return;
@@ -4726,6 +4726,7 @@ function RequestListView({
             isArchiveView={isArchiveView}
             onUpdateStatus={onUpdateStatus}
             onUpdateQA={onUpdateQA}
+            onUpdateRequest={onUpdateRequest}
             appConfig={appConfig}
           />
         )}
@@ -5005,10 +5006,11 @@ function ViewRequestModal({
   isArchiveView = false,
   onUpdateStatus,
   onUpdateQA,
+  onUpdateRequest,
   appConfig
-}: { 
-  request: Request, 
-  onClose: () => void, 
+}: {
+  request: Request,
+  onClose: () => void,
   onOpenComments: (id: string) => void,
   isDarkMode?: boolean,
   isAdmin?: boolean,
@@ -5016,6 +5018,7 @@ function ViewRequestModal({
   isArchiveView?: boolean,
   onUpdateStatus: (id: string, status: RequestStatus) => void,
   onUpdateQA: (id: string, qa: QAStatus) => void,
+  onUpdateRequest?: (req: Request) => void,
   appConfig?: Config
 }) {
   const getStatusStyles = (status: string) => {
@@ -5157,7 +5160,12 @@ function ViewRequestModal({
           <div className="space-y-1">
             <span className="text-[10px] font-black uppercase tracking-widest text-gray-400 block px-1">Subtasks</span>
             <div className={`p-4 rounded-2xl border ${isDarkMode ? 'bg-dark-800/60 border-dark-750' : 'bg-gray-50/50 border-gray-100'}`}>
-              <SubtaskChecks request={request} isDarkMode={isDarkMode} disabled onToggle={() => {}} />
+              <SubtaskChecks
+                request={request}
+                isDarkMode={isDarkMode}
+                disabled={request.isArchived || !onUpdateRequest || !hasPermission(userRole, 'update_flow_status', appConfig || APP_CONFIG)}
+                onToggle={(key, value) => onUpdateRequest?.({ ...request, [key]: value })}
+              />
             </div>
           </div>
 
