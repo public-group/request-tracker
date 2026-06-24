@@ -88,6 +88,10 @@ import {
   Line
 } from 'recharts';
 
+// Injected at build time by Vite (see vite.config.ts `define`)
+declare const __BUILD_TIME__: string;
+const BUILD_TIME: string = typeof __BUILD_TIME__ !== 'undefined' ? __BUILD_TIME__ : '';
+
 export type UserRole = string;
 
 interface NotificationSettings {
@@ -827,6 +831,16 @@ const SettingsView = ({
             <span className="text-gray-500 font-medium">Last Sync</span>
             <span className={isDarkMode ? 'text-gray-300' : 'text-gray-800 font-bold'}>Real-time Active</span>
           </div>
+          {isActuallyAdmin && (
+            <div className="flex items-center justify-between text-sm mt-2">
+              <span className="text-gray-500 font-medium">Last Build</span>
+              <span className={isDarkMode ? 'text-gray-300 font-bold' : 'text-gray-800 font-bold'}>
+                {BUILD_TIME
+                  ? new Date(BUILD_TIME).toLocaleString([], { year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })
+                  : 'Unknown'}
+              </span>
+            </div>
+          )}
         </div>
       </div>
 
