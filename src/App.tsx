@@ -1615,7 +1615,8 @@ export default function App() {
       qaStatus: 'Waiting',
       comments: '',
       subtaskRequestActions: false,
-      subtaskLockedValuelist: false
+      subtaskLockedValuelist: false,
+      requestActionsCompletedAt: ''
     };
 
     try {
@@ -4035,6 +4036,15 @@ function SubtaskChecks({
   );
 }
 
+// Toggling "Request Actions" stamps (or clears) the completion time, which freezes the SLA clock.
+function applySubtaskToggle(request: Request, key: RequestSubtaskKey, value: boolean): Request {
+  const updated: Request = { ...request, [key]: value };
+  if (key === 'subtaskRequestActions') {
+    updated.requestActionsCompletedAt = value ? new Date().toISOString() : '';
+  }
+  return updated;
+}
+
 function RequestListView({
   requests, 
   isAdmin, 
@@ -4375,6 +4385,7 @@ function RequestListView({
                     )}
                   </div>
                 </th>
+                <th className={compactView ? "px-6 py-2 font-bold" : "px-6 py-3 font-bold"}>Req. Actions Completion</th>
                 <th className={compactView ? "px-6 py-2 font-bold" : "px-6 py-3 font-bold"}>Owner</th>
                 {isAdmin && <th className={compactView ? "px-6 py-2 font-bold text-right" : "px-6 py-3 font-bold text-right"}>Actions</th>}
               </tr>
@@ -4439,6 +4450,11 @@ function RequestListView({
                       </div>
                     </td>
 
+                    {/* Req. Actions Completion Column */}
+                    <td className={compactView ? "px-6 py-2" : "px-6 py-4"}>
+                      <div className={`h-4 w-24 rounded animate-pulse ${isDarkMode ? 'bg-dark-800' : 'bg-gray-200'}`} />
+                    </td>
+
                     {/* Owner Column */}
                     <td className={compactView ? "px-6 py-2" : "px-6 py-4"}>
                       <div className={`h-4 w-20 rounded animate-pulse ${isDarkMode ? 'bg-dark-800' : 'bg-gray-200'}`} />
@@ -4457,13 +4473,15 @@ function RequestListView({
                 ))
               ) : filteredRequests.length === 0 ? (
                 <tr>
-                  <td colSpan={isAdmin ? 9 : 8} className="px-6 py-12 text-center text-gray-400 italic font-medium">
+                  <td colSpan={isAdmin ? 10 : 9} className="px-6 py-12 text-center text-gray-400 italic font-medium">
                     No requests found matching your filters
                   </td>
                 </tr>
               ) : (
                 filteredRequests.map((request) => {
-                  const now = new Date();
+                  // Once "Request Actions" is ticked the SLA clock freezes at the completion moment.
+                  const reqActionsDoneAt = request.requestActionsCompletedAt ? new Date(request.requestActionsCompletedAt) : null;
+                  const now = reqActionsDoneAt || new Date();
                   const deadline = new Date(request.slaDeadline);
                   const isDelayedByTime = request.status !== 'Live' && now > deadline;
                   const isDelayedByStatus = request.status === 'Delayed';
@@ -4553,7 +4571,7 @@ function RequestListView({
                           isDarkMode={isDarkMode}
                           compact={compactView}
                           disabled={request.isArchived ? true : !hasPermission(userRole, 'update_flow_status', appConfig)}
-                          onToggle={(key, value) => onUpdateRequest({ ...request, [key]: value })}
+                          onToggle={(key, value) => onUpdateRequest(applySubtaskToggle(request, key, value))}
                         />
                       </td>
 
@@ -4637,6 +4655,22 @@ function RequestListView({
                             </span>
                           )}
                         </div>
+                      </td>
+                      <td className={compactView ? "px-6 py-2" : "px-6 py-4"}>
+                        {reqActionsDoneAt ? (
+                          <div className="flex flex-col gap-1">
+                            <span className={`font-bold ${isDarkMode ? 'text-emerald-400' : 'text-emerald-600'} ${compactView ? 'text-xs' : 'text-sm'}`}>
+                              {reqActionsDoneAt.toLocaleDateString([], { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}
+                            </span>
+                            <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-lg text-[9px] font-black uppercase tracking-widest border max-w-fit ${
+                              isDarkMode ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20' : 'bg-emerald-50 text-emerald-700 border-emerald-200'
+                            }`}>
+                              ✓ SLA Paused
+                            </span>
+                          </div>
+                        ) : (
+                          <span className={`italic ${compactView ? 'text-xs' : 'text-sm'} ${isDarkMode ? 'text-gray-600' : 'text-gray-400'}`}>—</span>
+                        )}
                       </td>
                       <td className={compactView ? "px-6 py-2" : "px-6 py-4"}>
                         <div className="flex flex-col">
@@ -4963,7 +4997,7 @@ function EditRequestModal({
               <SubtaskChecks
                 request={formData}
                 isDarkMode={isDarkMode}
-                onToggle={(key, value) => setFormData({ ...formData, [key]: value })}
+                onToggle={(key, value) => setFormData(applySubtaskToggle(formData, key, value))}
               />
             </div>
           </div>
@@ -5066,7 +5100,9 @@ function ViewRequestModal({
     }
   };
 
-  const now = new Date();
+  // Once "Request Actions" is ticked the SLA clock freezes at the completion moment.
+  const reqActionsDoneAt = request.requestActionsCompletedAt ? new Date(request.requestActionsCompletedAt) : null;
+  const now = reqActionsDoneAt || new Date();
   const deadline = new Date(request.slaDeadline);
   const isDelayedByTime = request.status !== 'Live' && now > deadline;
   const isSlaWarning = request.status !== 'Live' && !isDelayedByTime && (deadline.getTime() - now.getTime() > 0) && (deadline.getTime() - now.getTime() <= 24 * 60 * 60 * 1000);
@@ -5178,7 +5214,7 @@ function ViewRequestModal({
                 request={request}
                 isDarkMode={isDarkMode}
                 disabled={request.isArchived || !onUpdateRequest || !hasPermission(userRole, 'update_flow_status', appConfig || APP_CONFIG)}
-                onToggle={(key, value) => onUpdateRequest?.({ ...request, [key]: value })}
+                onToggle={(key, value) => onUpdateRequest?.(applySubtaskToggle(request, key, value))}
               />
             </div>
           </div>
@@ -5247,11 +5283,30 @@ function ViewRequestModal({
                 <span>{formatDate(request.slaDeadline)}</span>
                 {isSlaWarning && (
                   <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-black uppercase tracking-wider border shadow-sm animate-pulse ${
-                    isDarkMode 
-                      ? 'bg-amber-500/10 text-amber-450 border-amber-500/20' 
+                    isDarkMode
+                      ? 'bg-amber-500/10 text-amber-450 border-amber-500/20'
                       : 'bg-amber-100/60 text-amber-800 border-amber-300'
                   }`}>
                     ⚠️ {hoursRemaining}h remaining
+                  </span>
+                )}
+              </div>
+            </div>
+            <div className="space-y-1">
+              <span className="text-[10px] font-black uppercase tracking-widest text-gray-400 block px-1 flex items-center gap-1.5">
+                <CheckCircle2 size={12} /> Req. Actions Completion
+              </span>
+              <div className={`p-4 rounded-2xl font-bold text-sm flex items-center justify-between gap-2 border ${
+                reqActionsDoneAt
+                  ? (isDarkMode ? 'bg-emerald-500/5 border-emerald-500/30 text-emerald-400' : 'bg-emerald-50 border-emerald-200 text-emerald-700')
+                  : (isDarkMode ? 'bg-dark-800/60 border border-dark-750 text-gray-400' : 'bg-gray-50/50 border-gray-100 text-gray-400')
+              }`}>
+                <span>{reqActionsDoneAt ? formatDate(request.requestActionsCompletedAt!) : 'Not completed yet'}</span>
+                {reqActionsDoneAt && (
+                  <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-black uppercase tracking-wider border shadow-sm ${
+                    isDarkMode ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20' : 'bg-emerald-100/60 text-emerald-800 border-emerald-300'
+                  }`}>
+                    ✓ SLA Paused
                   </span>
                 )}
               </div>

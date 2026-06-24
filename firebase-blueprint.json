@@ -38,6 +38,7 @@
         "isArchived": { "type": "boolean" },
         "subtaskRequestActions": { "type": "boolean", "description": "Fixed per-request subtask: Request Actions" },
         "subtaskLockedValuelist": { "type": "boolean", "description": "Fixed per-request subtask: Locked Valuelist" },
+        "requestActionsCompletedAt": { "type": "string", "format": "date-time", "description": "When Request Actions was ticked; freezes the SLA clock" },
         "userId": { "type": "string" }
       },
       "required": ["division", "category", "requestType", "submitter", "brief", "description", "status", "qaStatus", "userId"]

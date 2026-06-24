@@ -63,12 +63,14 @@ service cloud.firestore {
       let hasRequestId = data.keys().hasAll(['requestId']);
       let hasSubtaskRA = 'subtaskRequestActions' in data;
       let hasSubtaskLV = 'subtaskLockedValuelist' in data;
-      let expectedSize = 17 + (hasRequestId ? 1 : 0) + (hasCommentsList ? 1 : 0) + (hasSubtaskRA ? 1 : 0) + (hasSubtaskLV ? 1 : 0);
+      let hasReqActionsAt = 'requestActionsCompletedAt' in data;
+      let expectedSize = 17 + (hasRequestId ? 1 : 0) + (hasCommentsList ? 1 : 0) + (hasSubtaskRA ? 1 : 0) + (hasSubtaskLV ? 1 : 0) + (hasReqActionsAt ? 1 : 0);
 
       return data.keys().hasAll(baseKeys) &&
              data.keys().size() == expectedSize &&
              (!hasSubtaskRA || data.subtaskRequestActions is bool) &&
              (!hasSubtaskLV || data.subtaskLockedValuelist is bool) &&
+             (!hasReqActionsAt || data.requestActionsCompletedAt is string) &&
              data.division in ['Home', 'Entertainment', 'Technology'] &&
              (!hasRequestId || (data.requestId is string && data.requestId.size() <= 20)) &&
              (!hasCommentsList || (data.commentsList is list && data.commentsList.size() <= 500)) &&
@@ -195,7 +197,8 @@ service cloud.firestore {
         // Case: Any approved user can update comments or commentsList
         (incoming().diff(existing()).affectedKeys().hasOnly(['comments', 'commentsList', 'updateDate'])) ||
         // Case: Any approved user can toggle the fixed per-request subtasks
-        (incoming().diff(existing()).affectedKeys().hasOnly(['subtaskRequestActions', 'subtaskLockedValuelist', 'updateDate']) &&
+        // (ticking "Request Actions" also stamps requestActionsCompletedAt)
+        (incoming().diff(existing()).affectedKeys().hasOnly(['subtaskRequestActions', 'subtaskLockedValuelist', 'requestActionsCompletedAt', 'updateDate']) &&
          isValidRequest(incoming())) ||
         // Case: Team Leaders / Managers can update operational flow status
         // (qaStatus may change as an automatic side effect when moving to Live)
@@ -206,12 +209,12 @@ service cloud.firestore {
          incoming().userId == existing().userId) ||
         // Case: User updates their own request (restricted fields)
         (isOwner(existing().userId) &&
-         incoming().diff(existing()).affectedKeys().hasOnly(['status', 'category', 'description', 'brief', 'updateDate', 'subtaskRequestActions', 'subtaskLockedValuelist']) &&
+         incoming().diff(existing()).affectedKeys().hasOnly(['status', 'category', 'description', 'brief', 'updateDate', 'subtaskRequestActions', 'subtaskLockedValuelist', 'requestActionsCompletedAt']) &&
          (getUserData().role != 'Digital Merch' || !incoming().diff(existing()).affectedKeys().hasAny(['status'])) &&
          isValidRequest(incoming())) ||
         // Case: Admin updates everything
         (isAdmin() &&
-         incoming().diff(existing()).affectedKeys().hasOnly(['status', 'qaStatus', 'category', 'description', 'brief', 'isArchived', 'updateDate', 'comments', 'commentsList', 'owner', 'priorityTier', 'slaDeadline', 'submitter', 'division', 'requestType', 'valuesCount', 'subtaskRequestActions', 'subtaskLockedValuelist']) &&
+         incoming().diff(existing()).affectedKeys().hasOnly(['status', 'qaStatus', 'category', 'description', 'brief', 'isArchived', 'updateDate', 'comments', 'commentsList', 'owner', 'priorityTier', 'slaDeadline', 'submitter', 'division', 'requestType', 'valuesCount', 'subtaskRequestActions', 'subtaskLockedValuelist', 'requestActionsCompletedAt']) &&
          incoming().userId == existing().userId &&
          isValidRequest(incoming()))
       ));

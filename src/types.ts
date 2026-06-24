@@ -34,6 +34,8 @@ export interface Request {
   // Fixed per-request subtasks (same two for every request)
   subtaskRequestActions?: boolean;
   subtaskLockedValuelist?: boolean;
+  // ISO timestamp set when "Request Actions" is ticked; '' when not completed. Freezes the SLA clock.
+  requestActionsCompletedAt?: string;
 }
 
 export type RequestSubtaskKey = 'subtaskRequestActions' | 'subtaskLockedValuelist';
