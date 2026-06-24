@@ -197,6 +197,13 @@ service cloud.firestore {
         // Case: Any approved user can toggle the fixed per-request subtasks
         (incoming().diff(existing()).affectedKeys().hasOnly(['subtaskRequestActions', 'subtaskLockedValuelist', 'updateDate']) &&
          isValidRequest(incoming())) ||
+        // Case: Team Leaders / Managers can update operational flow status
+        // (qaStatus may change as an automatic side effect when moving to Live)
+        ((getUserData().role == 'Team Leader' || getUserData().role == 'Manager') &&
+         incoming().diff(existing()).affectedKeys().hasOnly(['status', 'qaStatus', 'updateDate']) &&
+         incoming().status in ['Not Started', 'Pending', 'In Progress', 'Live', 'Delayed', 'Blocked'] &&
+         incoming().qaStatus in ['Waiting', 'Pending', 'Approved', 'Rejected'] &&
+         incoming().userId == existing().userId) ||
         // Case: User updates their own request (restricted fields)
         (isOwner(existing().userId) &&
          incoming().diff(existing()).affectedKeys().hasOnly(['status', 'category', 'description', 'brief', 'updateDate', 'subtaskRequestActions', 'subtaskLockedValuelist']) &&
