@@ -2273,8 +2273,16 @@ export default function App() {
                   appConfig={appConfig}
                   onUpdateConfig={async (newConfigObj) => {
                     try {
-                      setAppConfig(newConfigObj);
-                      await firebaseService.updateAppConfig(newConfigObj);
+                      // DIVISION_CATEGORIES is stored in the app_config doc but lives in a
+                      // separate state (not part of appConfig). updateAppConfig overwrites the
+                      // whole doc, so any save that omits DIVISION_CATEGORIES (e.g. capacity,
+                      // owners, roles) would wipe all custom categories. Always carry it through.
+                      const configToSave = {
+                        ...newConfigObj,
+                        DIVISION_CATEGORIES: (newConfigObj as any).DIVISION_CATEGORIES ?? divisionCategories,
+                      };
+                      setAppConfig(configToSave);
+                      await firebaseService.updateAppConfig(configToSave);
                       showNotification('System configuration updated successfully');
                       firebaseService.addLog({
                         action: 'Update Config',
