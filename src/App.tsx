@@ -4123,7 +4123,6 @@ function RequestListView({
   const [editingRequest, setEditingRequest] = useState<Request | null>(null);
   const [viewingRequest, setViewingRequest] = useState<Request | null>(null);
   const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
-  const [isConfirmingReset, setIsConfirmingReset] = useState(false);
   const [openDropdownRowId, setOpenDropdownRowId] = useState<string | null>(null);
 
   // Filtering State
@@ -4234,34 +4233,7 @@ function RequestListView({
         <div className="flex flex-wrap gap-3">
           {!isArchiveView && isAdmin && (
             <div className="flex gap-3">
-              {isConfirmingReset ? (
-                <div className="flex gap-2 items-center bg-red-50 p-2 rounded-lg border border-red-100">
-                  <span className="text-[10px] font-bold text-red-600 uppercase">Confirm reset?</span>
-                  <button 
-                    onClick={() => {
-                      onReset?.();
-                      setIsConfirmingReset(false);
-                    }}
-                    className="bg-red-600 text-white px-2 py-1 rounded text-[10px] font-bold cursor-pointer"
-                  >
-                    RESET
-                  </button>
-                  <button 
-                    onClick={() => setIsConfirmingReset(false)}
-                    className="bg-gray-400 text-white px-2 py-1 rounded text-[10px] font-bold cursor-pointer"
-                  >
-                    CANCEL
-                  </button>
-                </div>
-              ) : (
-                <button 
-                  onClick={() => setIsConfirmingReset(true)}
-                  className="bg-red-500 text-white px-4 py-2 rounded-lg text-xs font-bold shadow-md hover:bg-red-600 transition-colors cursor-pointer z-50"
-                >
-                  Reset All Data
-                </button>
-              )}
-              <button 
+              <button
                 onClick={() => {
                   console.log('Archive Completed button clicked');
                   onArchive?.();
