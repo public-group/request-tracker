@@ -4695,7 +4695,7 @@ function RequestListView({
                                   ? (isDarkMode ? 'bg-purple-500/10 text-purple-400 border-purple-500/20' : 'bg-purple-50 text-purple-600 border-purple-100')
                                   : (isDarkMode ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20' : 'bg-emerald-50 text-emerald-700 border-emerald-200')
                               }`}>
-                                {request.subtaskLockedValuelist ? '✓ Ready for Review' : '✓ Waiting for lock'}
+                                {request.subtaskLockedValuelist ? 'Ready for Review' : 'Waiting for lock'}
                               </span>
                             </div>
                           ) : (
@@ -5330,7 +5330,7 @@ function ViewRequestModal({
                     ? (isDarkMode ? 'bg-purple-500/10 text-purple-400 border-purple-500/20' : 'bg-purple-100/60 text-purple-800 border-purple-300')
                     : (isDarkMode ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20' : 'bg-emerald-100/60 text-emerald-800 border-emerald-300')
                 }`}>
-                  {request.subtaskLockedValuelist ? '✓ Ready for Review' : '✓ Waiting for lock'}
+                  {request.subtaskLockedValuelist ? 'Ready for Review' : 'Waiting for lock'}
                 </span>
               )}
             </div>
