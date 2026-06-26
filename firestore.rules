@@ -196,10 +196,15 @@ service cloud.firestore {
       allow update: if (isApproved() && (
         // Case: Any approved user can update comments or commentsList
         (incoming().diff(existing()).affectedKeys().hasOnly(['comments', 'commentsList', 'updateDate'])) ||
-        // Case: Any approved user can toggle the fixed per-request subtasks
-        // (ticking "Request Actions" also stamps requestActionsCompletedAt)
+        // Case: Any approved user (incl. Team Leaders / Managers) can toggle the
+        // fixed per-request subtasks. hasOnly guarantees only these fields change
+        // (so userId and everything else stay intact); we type-check the toggled
+        // fields directly rather than via isValidRequest, which would otherwise
+        // require the editor to be the request's creator or an admin.
         (incoming().diff(existing()).affectedKeys().hasOnly(['subtaskRequestActions', 'subtaskLockedValuelist', 'requestActionsCompletedAt', 'updateDate']) &&
-         isValidRequest(incoming())) ||
+         (!('subtaskRequestActions' in incoming()) || incoming().subtaskRequestActions is bool) &&
+         (!('subtaskLockedValuelist' in incoming()) || incoming().subtaskLockedValuelist is bool) &&
+         (!('requestActionsCompletedAt' in incoming()) || incoming().requestActionsCompletedAt is string)) ||
         // Case: Team Leaders / Managers can update operational flow status
         // (qaStatus may change as an automatic side effect when moving to Live)
         ((getUserData().role == 'Team Leader' || getUserData().role == 'Manager') &&
