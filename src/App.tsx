@@ -4402,7 +4402,7 @@ function RequestListView({
                     )}
                   </div>
                 </th>
-                <th className={compactView ? "px-6 py-2 font-bold" : "px-6 py-3 font-bold"}>Req. Actions Completion</th>
+                {!isArchiveView && <th className={compactView ? "px-6 py-2 font-bold" : "px-6 py-3 font-bold"}>Req. Actions Completion</th>}
                 <th className={compactView ? "px-6 py-2 font-bold" : "px-6 py-3 font-bold"}>Owner</th>
                 {isAdmin && <th className={compactView ? "px-6 py-2 font-bold text-right" : "px-6 py-3 font-bold text-right"}>Actions</th>}
               </tr>
@@ -4468,9 +4468,11 @@ function RequestListView({
                     </td>
 
                     {/* Req. Actions Completion Column */}
-                    <td className={compactView ? "px-6 py-2" : "px-6 py-4"}>
-                      <div className={`h-4 w-24 rounded animate-pulse ${isDarkMode ? 'bg-dark-800' : 'bg-gray-200'}`} />
-                    </td>
+                    {!isArchiveView && (
+                      <td className={compactView ? "px-6 py-2" : "px-6 py-4"}>
+                        <div className={`h-4 w-24 rounded animate-pulse ${isDarkMode ? 'bg-dark-800' : 'bg-gray-200'}`} />
+                      </td>
+                    )}
 
                     {/* Owner Column */}
                     <td className={compactView ? "px-6 py-2" : "px-6 py-4"}>
@@ -4490,7 +4492,7 @@ function RequestListView({
                 ))
               ) : filteredRequests.length === 0 ? (
                 <tr>
-                  <td colSpan={isAdmin ? 10 : 9} className="px-6 py-12 text-center text-gray-400 italic font-medium">
+                  <td colSpan={isArchiveView ? (isAdmin ? 9 : 8) : (isAdmin ? 10 : 9)} className="px-6 py-12 text-center text-gray-400 italic font-medium">
                     No requests found matching your filters
                   </td>
                 </tr>
@@ -4681,24 +4683,26 @@ function RequestListView({
                           )}
                         </div>
                       </td>
-                      <td className={compactView ? "px-6 py-2" : "px-6 py-4"}>
-                        {reqActionsDoneAt ? (
-                          <div className="flex flex-col gap-1">
-                            <span className={`font-bold ${isDarkMode ? 'text-emerald-400' : 'text-emerald-600'} ${compactView ? 'text-xs' : 'text-sm'}`}>
-                              {reqActionsDoneAt.toLocaleDateString([], { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}
-                            </span>
-                            <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-lg text-[9px] font-black uppercase tracking-widest border max-w-fit ${
-                              request.subtaskLockedValuelist
-                                ? (isDarkMode ? 'bg-purple-500/10 text-purple-400 border-purple-500/20' : 'bg-purple-50 text-purple-600 border-purple-100')
-                                : (isDarkMode ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20' : 'bg-emerald-50 text-emerald-700 border-emerald-200')
-                            }`}>
-                              {request.subtaskLockedValuelist ? '✓ Ready for Review' : '✓ SLA Paused, waiting for lock'}
-                            </span>
-                          </div>
-                        ) : (
-                          <span className={`italic ${compactView ? 'text-xs' : 'text-sm'} ${isDarkMode ? 'text-gray-600' : 'text-gray-400'}`}>—</span>
-                        )}
-                      </td>
+                      {!isArchiveView && (
+                        <td className={compactView ? "px-6 py-2" : "px-6 py-4"}>
+                          {reqActionsDoneAt ? (
+                            <div className="flex flex-col gap-1">
+                              <span className={`font-bold ${isDarkMode ? 'text-emerald-400' : 'text-emerald-600'} ${compactView ? 'text-xs' : 'text-sm'}`}>
+                                {reqActionsDoneAt.toLocaleDateString([], { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}
+                              </span>
+                              <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-lg text-[9px] font-black uppercase tracking-widest border max-w-fit ${
+                                request.subtaskLockedValuelist
+                                  ? (isDarkMode ? 'bg-purple-500/10 text-purple-400 border-purple-500/20' : 'bg-purple-50 text-purple-600 border-purple-100')
+                                  : (isDarkMode ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20' : 'bg-emerald-50 text-emerald-700 border-emerald-200')
+                              }`}>
+                                {request.subtaskLockedValuelist ? '✓ Ready for Review' : '✓ Waiting for lock'}
+                              </span>
+                            </div>
+                          ) : (
+                            <span className={`italic ${compactView ? 'text-xs' : 'text-sm'} ${isDarkMode ? 'text-gray-600' : 'text-gray-400'}`}>—</span>
+                          )}
+                        </td>
+                      )}
                       <td className={compactView ? "px-6 py-2" : "px-6 py-4"}>
                         <div className="flex flex-col">
                           <span className={`${compactView ? "text-xs" : ""} font-bold tracking-tight ${isDarkMode ? 'text-gray-200' : 'text-gray-800'}`}>{request.owner}</span>
@@ -5326,7 +5330,7 @@ function ViewRequestModal({
                     ? (isDarkMode ? 'bg-purple-500/10 text-purple-400 border-purple-500/20' : 'bg-purple-100/60 text-purple-800 border-purple-300')
                     : (isDarkMode ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20' : 'bg-emerald-100/60 text-emerald-800 border-emerald-300')
                 }`}>
-                  {request.subtaskLockedValuelist ? '✓ Ready for Review' : '✓ SLA Paused, waiting for lock'}
+                  {request.subtaskLockedValuelist ? '✓ Ready for Review' : '✓ Waiting for lock'}
                 </span>
               )}
             </div>
