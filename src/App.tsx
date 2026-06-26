@@ -4688,9 +4688,11 @@ function RequestListView({
                               {reqActionsDoneAt.toLocaleDateString([], { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}
                             </span>
                             <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-lg text-[9px] font-black uppercase tracking-widest border max-w-fit ${
-                              isDarkMode ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20' : 'bg-emerald-50 text-emerald-700 border-emerald-200'
+                              request.subtaskLockedValuelist
+                                ? (isDarkMode ? 'bg-purple-500/10 text-purple-400 border-purple-500/20' : 'bg-purple-50 text-purple-600 border-purple-100')
+                                : (isDarkMode ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20' : 'bg-emerald-50 text-emerald-700 border-emerald-200')
                             }`}>
-                              ✓ SLA Paused
+                              {request.subtaskLockedValuelist ? '✓ Ready for Review' : '✓ SLA Paused, waiting for lock'}
                             </span>
                           </div>
                         ) : (
@@ -5311,16 +5313,20 @@ function ViewRequestModal({
               <CheckCircle2 size={12} /> Req. Actions Completion
             </span>
             <div className={`p-4 rounded-2xl font-bold text-sm flex items-center justify-between gap-2 border ${
-              reqActionsDoneAt
-                ? (isDarkMode ? 'bg-emerald-500/5 border-emerald-500/30 text-emerald-400' : 'bg-emerald-50 border-emerald-200 text-emerald-700')
-                : (isDarkMode ? 'bg-dark-800/60 border border-dark-750 text-gray-400' : 'bg-gray-50/50 border-gray-100 text-gray-400')
+              !reqActionsDoneAt
+                ? (isDarkMode ? 'bg-dark-800/60 border border-dark-750 text-gray-400' : 'bg-gray-50/50 border-gray-100 text-gray-400')
+                : request.subtaskLockedValuelist
+                  ? (isDarkMode ? 'bg-purple-500/5 border-purple-500/30 text-purple-400' : 'bg-purple-50 border-purple-200 text-purple-700')
+                  : (isDarkMode ? 'bg-emerald-500/5 border-emerald-500/30 text-emerald-400' : 'bg-emerald-50 border-emerald-200 text-emerald-700')
             }`}>
               <span>{reqActionsDoneAt ? formatDate(request.requestActionsCompletedAt!) : 'Not completed yet'}</span>
               {reqActionsDoneAt && (
                 <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-black uppercase tracking-wider border shadow-sm ${
-                  isDarkMode ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20' : 'bg-emerald-100/60 text-emerald-800 border-emerald-300'
+                  request.subtaskLockedValuelist
+                    ? (isDarkMode ? 'bg-purple-500/10 text-purple-400 border-purple-500/20' : 'bg-purple-100/60 text-purple-800 border-purple-300')
+                    : (isDarkMode ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20' : 'bg-emerald-100/60 text-emerald-800 border-emerald-300')
                 }`}>
-                  ✓ SLA Paused
+                  {request.subtaskLockedValuelist ? '✓ Ready for Review' : '✓ SLA Paused, waiting for lock'}
                 </span>
               )}
             </div>
