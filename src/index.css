@@ -47,6 +47,24 @@
   @apply bg-[#FE5900];
 }
 
+/* Always-orange scrollbar — signals there is more content to scroll */
+.orange-scrollbar {
+  scrollbar-color: #FE5900 transparent; /* Firefox: thumb / track */
+}
+.orange-scrollbar::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+.orange-scrollbar::-webkit-scrollbar-track {
+  @apply bg-transparent;
+}
+.orange-scrollbar::-webkit-scrollbar-thumb {
+  @apply bg-[#FE5900] rounded-full border-[3px] border-transparent bg-clip-padding;
+}
+.orange-scrollbar::-webkit-scrollbar-thumb:hover {
+  @apply bg-[#FE5900]/80;
+}
+
 /* Glass effect utilities */
 .glass-morphism {
   @apply bg-white/70 backdrop-blur-xl border border-white/20;

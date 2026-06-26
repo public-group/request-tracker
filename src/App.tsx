@@ -4964,6 +4964,24 @@ function EditRequestModal({
           </div>
 
           <div className="space-y-2">
+            <label className="text-[10px] font-black uppercase tracking-widest text-gray-400 mb-2 block flex items-center gap-2">
+              <FileText size={12} />
+              Description
+            </label>
+            <textarea
+              rows={4}
+              placeholder="Describe the scope of work..."
+              value={formData.description}
+              onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+              className={`w-full px-4 py-3 border rounded-xl outline-none font-medium text-sm transition-all resize-none ${
+                isDarkMode
+                  ? 'bg-dark-800 border-dark-700 text-white focus:border-orange-500 focus:ring-4 focus:ring-orange-500/10'
+                  : 'bg-gray-50 border-gray-100 text-gray-900 focus:border-orange-100 focus:bg-white'
+              }`}
+            />
+          </div>
+
+          <div className="space-y-2">
             <div className="flex items-center justify-between">
               <label className="text-[10px] font-black uppercase tracking-widest text-[#FE5900] flex items-center gap-2">
                 <Clock size={12} />
@@ -5189,7 +5207,7 @@ function ViewRequestModal({
           </button>
         </div>
 
-        <div className="p-8 flex-1 overflow-y-auto grid grid-cols-1 md:grid-cols-2 gap-4 content-start">
+        <div className="p-8 flex-1 overflow-y-auto orange-scrollbar grid grid-cols-1 md:grid-cols-2 gap-4 content-start">
           <div className={`p-4 rounded-2xl border flex flex-col justify-between ${isDarkMode ? 'bg-dark-800/40 border-dark-750' : 'bg-gray-50 border-gray-100'}`}>
             <span className="text-[10px] font-black uppercase tracking-widest text-gray-400 mb-2.5 block">Operational Status</span>
             <div className="flex items-center">
