@@ -53,7 +53,8 @@ import {
   Pin,
   PinOff,
   SlidersHorizontal,
-  Info
+  Info,
+  FileText
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { 
@@ -4576,6 +4577,14 @@ function RequestListView({
                              <a href={request.brief} target="_blank" rel="noopener noreferrer" className="text-[10px] text-orange-500 font-bold hover:underline flex items-center gap-1 transition-colors">
                                 Brief <ExternalLink size={10} />
                              </a>
+                             {request.description?.trim() && (
+                               <span
+                                 className={`text-[10px] font-bold flex items-center gap-1 whitespace-nowrap ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}
+                                 title={request.description.length > 240 ? `${request.description.slice(0, 240)}…` : request.description}
+                               >
+                                 <FileText size={10} className="text-gray-400" /> Desc
+                               </span>
+                             )}
                              {!compactView && <span className="text-[10px] text-gray-500 font-medium whitespace-nowrap">by {request.submitter}</span>}
                           </div>
                         </div>
@@ -4851,11 +4860,11 @@ function EditRequestModal({
         initial={{ opacity: 0, scale: 0.95, y: 20 }}
         animate={{ opacity: 1, scale: 1, y: 0 }}
         exit={{ opacity: 0, scale: 0.95, y: 20 }}
-        className={`relative rounded-3xl shadow-2xl w-full max-w-2xl overflow-hidden transition-colors border ${
+        className={`relative rounded-3xl shadow-2xl w-full max-w-2xl max-h-[90vh] flex flex-col overflow-hidden transition-colors border ${
           isDarkMode ? 'bg-dark-900 border-dark-700 shadow-black/80' : 'bg-white border-white'
         }`}
       >
-        <div className={`p-8 border-b flex items-center justify-between ${isDarkMode ? 'border-dark-800' : 'border-gray-100'}`}>
+        <div className={`p-8 border-b flex items-center justify-between shrink-0 ${isDarkMode ? 'border-dark-800' : 'border-gray-100'}`}>
           <div>
             <h3 className={`text-xl font-bold ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>Edit Request {request.requestId || request.id.substring(0, 8)}</h3>
             <span className="inline-block px-2 py-0.5 mt-1 bg-orange-500/10 text-orange-500 rounded text-[9px] font-black uppercase tracking-widest">Admin Authorization Required</span>
@@ -4865,7 +4874,7 @@ function EditRequestModal({
           </button>
         </div>
 
-        <div className="p-8 max-h-[70vh] overflow-y-auto space-y-6 custom-scrollbar">
+        <div className="p-8 flex-1 overflow-y-auto space-y-6 custom-scrollbar">
           {errorMessage && (
             <div className="p-4 rounded-xl border border-red-500/20 bg-red-500/10 text-red-500 text-xs font-bold leading-normal flex items-center gap-2 mb-2 animate-fade-in">
               <span className="w-1.5 h-1.5 rounded-full bg-red-500 animate-pulse shrink-0" />
@@ -5041,7 +5050,7 @@ function EditRequestModal({
           </div>
         </div>
 
-        <div className={`p-8 flex gap-4 transition-colors ${isDarkMode ? 'bg-dark-950/50 border-t border-dark-800' : 'bg-gray-50 border-t border-gray-100'}`}>
+        <div className={`p-8 flex gap-4 shrink-0 transition-colors ${isDarkMode ? 'bg-dark-950/50 border-t border-dark-800' : 'bg-gray-50 border-t border-gray-100'}`}>
           <button 
             onClick={onClose}
             className="flex-1 py-4 text-sm font-black uppercase tracking-widest text-gray-500 hover:text-gray-700 transition-colors cursor-pointer"
@@ -5138,11 +5147,11 @@ function ViewRequestModal({
         initial={{ opacity: 0, scale: 0.95, y: 20 }}
         animate={{ opacity: 1, scale: 1, y: 0 }}
         exit={{ opacity: 0, scale: 0.95, y: 20 }}
-        className={`relative rounded-3xl shadow-2xl w-full max-w-2xl overflow-hidden transition-colors border ${
+        className={`relative rounded-3xl shadow-2xl w-full max-w-2xl max-h-[90vh] flex flex-col overflow-hidden transition-colors border ${
           isDarkMode ? 'bg-dark-900 border-dark-700 shadow-black/80' : 'bg-white border-white'
         }`}
       >
-        <div className={`p-8 border-b flex items-center justify-between ${isDarkMode ? 'border-dark-800' : 'border-gray-100'}`}>
+        <div className={`p-8 border-b flex items-center justify-between shrink-0 ${isDarkMode ? 'border-dark-800' : 'border-gray-100'}`}>
           <div>
             <div className="flex items-center gap-3">
               <span className={`text-xs px-2.5 py-1 rounded-full font-black uppercase tracking-wider ${
@@ -5180,7 +5189,7 @@ function ViewRequestModal({
           </button>
         </div>
 
-        <div className="p-8 space-y-6">
+        <div className="p-8 space-y-6 flex-1 overflow-y-auto">
           <div className="grid grid-cols-2 gap-4">
             <div className={`p-4 rounded-2xl border flex flex-col justify-between ${isDarkMode ? 'bg-dark-800/40 border-dark-750' : 'bg-gray-50 border-gray-100'}`}>
               <span className="text-[10px] font-black uppercase tracking-widest text-gray-400 mb-2.5 block">Operational Status</span>
@@ -5220,6 +5229,17 @@ function ViewRequestModal({
                    ]}
                  />
               </div>
+            </div>
+          </div>
+
+          <div className="space-y-1">
+            <span className="text-[10px] font-black uppercase tracking-widest text-gray-400 block px-1 flex items-center gap-1.5">
+              <FileText size={12} /> Description
+            </span>
+            <div className={`p-4 rounded-2xl border text-sm leading-relaxed whitespace-pre-wrap break-words ${
+              isDarkMode ? 'bg-dark-800/60 border-dark-750' : 'bg-gray-50/50 border-gray-100'
+            } ${request.description?.trim() ? (isDarkMode ? 'text-gray-200' : 'text-gray-700') : 'italic text-gray-400'}`}>
+              {request.description?.trim() || 'No description provided.'}
             </div>
           </div>
 
@@ -5348,7 +5368,7 @@ function ViewRequestModal({
           </div>
         </div>
 
-        <div className={`p-8 flex justify-end transition-colors ${isDarkMode ? 'bg-dark-950/50 border-t border-dark-800' : 'bg-gray-50 border-t border-gray-100'}`}>
+        <div className={`p-8 flex justify-end shrink-0 transition-colors ${isDarkMode ? 'bg-dark-950/50 border-t border-dark-800' : 'bg-gray-50 border-t border-gray-100'}`}>
           <button 
             onClick={onClose}
             className="px-8 py-3.5 bg-[#FE5900] text-white rounded-2xl text-sm font-bold shadow-lg shadow-orange-500/20 hover:opacity-90 transition-opacity cursor-pointer"
