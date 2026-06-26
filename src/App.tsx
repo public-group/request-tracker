@@ -94,6 +94,13 @@ const BUILD_TIME: string = typeof __BUILD_TIME__ !== 'undefined' ? __BUILD_TIME_
 
 export type UserRole = string;
 
+// Effective time used to evaluate SLA/overdue status. Once "Request Actions" is
+// ticked the SLA clock freezes at the completion moment, so every overdue check
+// (lists, dashboards, KPIs, the auto-delay job) must use this instead of new Date().
+function slaEvalTime(r: Request, now: Date): Date {
+  return r.requestActionsCompletedAt ? new Date(r.requestActionsCompletedAt) : now;
+}
+
 interface NotificationSettings {
   emailEnabled: boolean;
   notifyTeamAssignment: boolean;
@@ -1409,6 +1416,7 @@ export default function App() {
     const now = new Date();
     const overdueRequests = requests.filter(req => {
       if (req.isArchived || req.status === 'Live' || req.status === 'Delayed' || req.status === 'Blocked') return false;
+      if (req.requestActionsCompletedAt) return false; // SLA paused — do not auto-delay
       const deadline = new Date(req.slaDeadline);
       return now > deadline;
     });
@@ -1576,7 +1584,7 @@ export default function App() {
       else if (status === "Live" && qaStatus === "Pending") stats.pendingQA++;
       
       // Delayed check based on date and status (replicating checkSLAStatus)
-      if (status !== "Live" && now > deadline && status !== "Delayed") {
+      if (status !== "Live" && slaEvalTime(r, now) > deadline && status !== "Delayed") {
         stats.delayed++;
       } else if (status === "Delayed") {
         stats.delayed++;
@@ -3161,7 +3169,7 @@ function DashboardView({
       else if (status === "In Progress") s.inProgress++;
       else if (status === "Live" && qaStatus === "Pending") s.pendingQA++;
       
-      if (status !== "Live" && now > deadline && status !== "Delayed") s.delayed++;
+      if (status !== "Live" && slaEvalTime(r, now) > deadline && status !== "Delayed") s.delayed++;
       else if (status === "Delayed") s.delayed++;
 
       if (status === "Blocked" || qaStatus === "Rejected") s.alert++;
@@ -3194,7 +3202,7 @@ function DashboardView({
       const deadline = new Date(r.slaDeadline);
       const isLive = r.status.trim() === "Live";
       const isDelayed = r.status.trim() === "Delayed";
-      return (!isLive && now > deadline) || isDelayed;
+      return (!isLive && slaEvalTime(r, now) > deadline) || isDelayed;
     }).length;
 
     const compliance = Math.round(((total - delayed) / total) * 100);
@@ -3255,7 +3263,7 @@ function DashboardView({
           const deadline = new Date(r.slaDeadline);
           const isLive = r.status.trim() === "Live";
           const isDelayed = r.status.trim() === "Delayed";
-          return (!isLive && now > deadline) || isDelayed;
+          return (!isLive && slaEvalTime(r, now) > deadline) || isDelayed;
         }).length;
 
         const compliancePercent = Math.round(((requestsUpToDay.length - delayedCount) / requestsUpToDay.length) * 100);
@@ -3337,7 +3345,7 @@ function DashboardView({
       return status === "Live" && qaStatus === "Pending";
     }
     if (filter === 'Delayed') {
-      return (status !== "Live" && now > deadline && status !== "Delayed") || status === "Delayed";
+      return (status !== "Live" && slaEvalTime(r, now) > deadline && status !== "Delayed") || status === "Delayed";
     }
     if (filter === 'Blocked') {
       return status === "Blocked" || qaStatus === "Rejected";
