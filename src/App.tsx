@@ -5147,7 +5147,7 @@ function ViewRequestModal({
         initial={{ opacity: 0, scale: 0.95, y: 20 }}
         animate={{ opacity: 1, scale: 1, y: 0 }}
         exit={{ opacity: 0, scale: 0.95, y: 20 }}
-        className={`relative rounded-3xl shadow-2xl w-full max-w-2xl max-h-[90vh] flex flex-col overflow-hidden transition-colors border ${
+        className={`relative rounded-3xl shadow-2xl w-full max-w-4xl max-h-[90vh] flex flex-col overflow-hidden transition-colors border ${
           isDarkMode ? 'bg-dark-900 border-dark-700 shadow-black/80' : 'bg-white border-white'
         }`}
       >
@@ -5189,50 +5189,48 @@ function ViewRequestModal({
           </button>
         </div>
 
-        <div className="p-8 space-y-6 flex-1 overflow-y-auto">
-          <div className="grid grid-cols-2 gap-4">
-            <div className={`p-4 rounded-2xl border flex flex-col justify-between ${isDarkMode ? 'bg-dark-800/40 border-dark-750' : 'bg-gray-50 border-gray-100'}`}>
-              <span className="text-[10px] font-black uppercase tracking-widest text-gray-400 mb-2.5 block">Operational Status</span>
-              <div className="flex items-center">
-                <CompactSelect
-                  value={request.status}
-                  onChange={(val) => onUpdateStatus(request.id, val as RequestStatus)}
-                  variant="status"
-                  disabled={request.isArchived ? true : !hasPermission(userRole, 'update_flow_status', appConfig || APP_CONFIG)}
-                  isDarkMode={isDarkMode}
-                  title={request.isArchived ? "Locked (Archived)" : (!hasPermission(userRole, 'update_flow_status', appConfig || APP_CONFIG) ? "Insufficient permissions" : "Update status")}
-                  options={[
-                    { value: 'Not Started', label: 'NOT STARTED' },
-                    { value: 'In Progress', label: 'IN PROGRESS' },
-                    { value: 'Live', label: 'LIVE' },
-                    { value: 'Delayed', label: 'DELAYED' },
-                    { value: 'Blocked', label: 'BLOCKED' },
-                  ]}
-                />
-              </div>
+        <div className="p-8 flex-1 overflow-y-auto grid grid-cols-1 md:grid-cols-2 gap-4 content-start">
+          <div className={`p-4 rounded-2xl border flex flex-col justify-between ${isDarkMode ? 'bg-dark-800/40 border-dark-750' : 'bg-gray-50 border-gray-100'}`}>
+            <span className="text-[10px] font-black uppercase tracking-widest text-gray-400 mb-2.5 block">Operational Status</span>
+            <div className="flex items-center">
+              <CompactSelect
+                value={request.status}
+                onChange={(val) => onUpdateStatus(request.id, val as RequestStatus)}
+                variant="status"
+                disabled={request.isArchived ? true : !hasPermission(userRole, 'update_flow_status', appConfig || APP_CONFIG)}
+                isDarkMode={isDarkMode}
+                title={request.isArchived ? "Locked (Archived)" : (!hasPermission(userRole, 'update_flow_status', appConfig || APP_CONFIG) ? "Insufficient permissions" : "Update status")}
+                options={[
+                  { value: 'Not Started', label: 'NOT STARTED' },
+                  { value: 'In Progress', label: 'IN PROGRESS' },
+                  { value: 'Live', label: 'LIVE' },
+                  { value: 'Delayed', label: 'DELAYED' },
+                  { value: 'Blocked', label: 'BLOCKED' },
+                ]}
+              />
             </div>
-            <div className={`p-4 rounded-2xl border flex flex-col justify-between ${isDarkMode ? 'bg-dark-800/40 border-dark-750' : 'bg-gray-50 border-gray-100'}`}>
-              <span className="text-[10px] font-black uppercase tracking-widest text-gray-400 mb-2.5 block">QA Status</span>
-              <div className="flex items-center">
-                <CompactSelect
-                   value={request.qaStatus}
-                   onChange={(val) => onUpdateQA(request.id, val as QAStatus)}
-                   variant="qa"
-                   disabled={request.isArchived ? true : !hasPermission(userRole, 'update_qa_status', appConfig || APP_CONFIG)}
-                   isDarkMode={isDarkMode}
-                   title={request.isArchived ? "Locked (Archived)" : (!hasPermission(userRole, 'update_qa_status', appConfig || APP_CONFIG) ? "Admins/QA owners only" : "Update QA status")}
-                   options={[
-                     { value: 'Waiting', label: 'WAITING' },
-                     { value: 'Pending', label: 'PENDING' },
-                     { value: 'Approved', label: 'APPROVED' },
-                     { value: 'Rejected', label: 'REJECTED' },
-                   ]}
-                 />
-              </div>
+          </div>
+          <div className={`p-4 rounded-2xl border flex flex-col justify-between ${isDarkMode ? 'bg-dark-800/40 border-dark-750' : 'bg-gray-50 border-gray-100'}`}>
+            <span className="text-[10px] font-black uppercase tracking-widest text-gray-400 mb-2.5 block">QA Status</span>
+            <div className="flex items-center">
+              <CompactSelect
+                 value={request.qaStatus}
+                 onChange={(val) => onUpdateQA(request.id, val as QAStatus)}
+                 variant="qa"
+                 disabled={request.isArchived ? true : !hasPermission(userRole, 'update_qa_status', appConfig || APP_CONFIG)}
+                 isDarkMode={isDarkMode}
+                 title={request.isArchived ? "Locked (Archived)" : (!hasPermission(userRole, 'update_qa_status', appConfig || APP_CONFIG) ? "Admins/QA owners only" : "Update QA status")}
+                 options={[
+                   { value: 'Waiting', label: 'WAITING' },
+                   { value: 'Pending', label: 'PENDING' },
+                   { value: 'Approved', label: 'APPROVED' },
+                   { value: 'Rejected', label: 'REJECTED' },
+                 ]}
+               />
             </div>
           </div>
 
-          <div className="space-y-1">
+          <div className="md:col-span-2 space-y-1">
             <span className="text-[10px] font-black uppercase tracking-widest text-gray-400 block px-1 flex items-center gap-1.5">
               <FileText size={12} /> Description
             </span>
@@ -5243,6 +5241,90 @@ function ViewRequestModal({
             </div>
           </div>
 
+          <div className="space-y-1">
+            <span className="text-[10px] font-black uppercase tracking-widest text-gray-400 block px-1">Category</span>
+            <div className={`p-4 rounded-2xl font-bold text-sm ${isDarkMode ? 'bg-dark-800/60 border border-dark-750 text-white' : 'bg-gray-50/50 border border-gray-100 text-gray-800'}`}>
+              {request.category || '—'}
+            </div>
+          </div>
+          <div className="space-y-1">
+            <span className="text-[10px] font-black uppercase tracking-widest text-gray-400 block px-1">Request Type</span>
+            <div className={`p-4 rounded-2xl font-bold text-sm ${isDarkMode ? 'bg-dark-800/60 border border-dark-750 text-white' : 'bg-gray-50/50 border border-gray-100 text-gray-800'}`}>
+              {request.requestType || '—'}
+            </div>
+          </div>
+
+          <div className="space-y-1">
+            <span className="text-[10px] font-black uppercase tracking-widest text-gray-400 block px-1">Values Count</span>
+            <div className={`p-4 rounded-2xl font-bold text-sm ${isDarkMode ? 'bg-dark-800/60 border border-dark-750 text-white' : 'bg-gray-50/50 border border-gray-100 text-gray-800'}`}>
+              {request.valuesCount?.toLocaleString() ?? 0}
+            </div>
+          </div>
+          <div className="space-y-1">
+            <span className="text-[10px] font-black uppercase tracking-widest text-gray-400 block px-1">Assignee / Owner</span>
+            <div className={`p-4 rounded-2xl font-bold text-sm ${isDarkMode ? 'bg-dark-800/60 border border-dark-750 text-white' : 'bg-gray-50/50 border border-gray-100 text-gray-800'}`}>
+              {request.owner || 'Unassigned'}
+            </div>
+          </div>
+
+          <div className="space-y-1">
+            <span className={`text-[10px] font-black uppercase tracking-widest block px-1 flex items-center gap-1.5 ${
+              isSlaWarning ? 'text-amber-500' : 'text-[#FE5900]'
+            }`}>
+              <Clock size={12} /> SLA Target Deadline
+            </span>
+            <div className={`p-4 rounded-2xl font-bold text-sm flex flex-col sm:flex-row sm:items-center justify-between gap-2 border ${
+              isSlaWarning
+                ? (isDarkMode ? 'bg-amber-500/5 border-amber-500/30 text-amber-400 shadow-[0_0_15px_rgba(245,158,11,0.05)]' : 'bg-amber-50 border-amber-200 text-amber-700')
+                : (isDarkMode ? 'bg-dark-800/60 border border-dark-750 text-white' : 'bg-orange-500/[0.01]/50 border-gray-100 text-gray-900')
+            }`}>
+              <span>{formatDate(request.slaDeadline)}</span>
+              {isSlaWarning && (
+                <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-black uppercase tracking-wider border shadow-sm animate-pulse ${
+                  isDarkMode ? 'bg-amber-500/10 text-amber-450 border-amber-500/20' : 'bg-amber-100/60 text-amber-800 border-amber-300'
+                }`}>
+                  ⚠️ {hoursRemaining}h remaining
+                </span>
+              )}
+            </div>
+          </div>
+          <div className="space-y-1">
+            <span className="text-[10px] font-black uppercase tracking-widest text-gray-400 block px-1 flex items-center gap-1.5">
+              <CheckCircle2 size={12} /> Req. Actions Completion
+            </span>
+            <div className={`p-4 rounded-2xl font-bold text-sm flex items-center justify-between gap-2 border ${
+              reqActionsDoneAt
+                ? (isDarkMode ? 'bg-emerald-500/5 border-emerald-500/30 text-emerald-400' : 'bg-emerald-50 border-emerald-200 text-emerald-700')
+                : (isDarkMode ? 'bg-dark-800/60 border border-dark-750 text-gray-400' : 'bg-gray-50/50 border-gray-100 text-gray-400')
+            }`}>
+              <span>{reqActionsDoneAt ? formatDate(request.requestActionsCompletedAt!) : 'Not completed yet'}</span>
+              {reqActionsDoneAt && (
+                <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-black uppercase tracking-wider border shadow-sm ${
+                  isDarkMode ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20' : 'bg-emerald-100/60 text-emerald-800 border-emerald-300'
+                }`}>
+                  ✓ SLA Paused
+                </span>
+              )}
+            </div>
+          </div>
+
+          <div className="space-y-1">
+            <span className="text-[10px] font-black uppercase tracking-widest text-gray-400 block px-1">Briefing Reference</span>
+            <div className={`p-4 rounded-2xl font-bold text-sm h-full flex items-center justify-between ${isDarkMode ? 'bg-dark-800/60 border border-dark-750' : 'bg-gray-50/50 border border-gray-100'}`}>
+              {request.brief ? (
+                <a
+                  href={request.brief}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-[#FE5900] font-bold hover:underline inline-flex items-center gap-1.5 max-w-full overflow-hidden text-ellipsis whitespace-nowrap"
+                >
+                  View Brief Document <ExternalLink size={14} className="shrink-0" />
+                </a>
+              ) : (
+                <span className="text-gray-400 italic">No brief document attached</span>
+              )}
+            </div>
+          </div>
           <div className="space-y-1">
             <span className="text-[10px] font-black uppercase tracking-widest text-gray-400 block px-1">Subtasks</span>
             <div className={`p-4 rounded-2xl border ${isDarkMode ? 'bg-dark-800/60 border-dark-750' : 'bg-gray-50/50 border-gray-100'}`}>
@@ -5255,103 +5337,9 @@ function ViewRequestModal({
             </div>
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-1">
-              <span className="text-[10px] font-black uppercase tracking-widest text-gray-400 block px-1">Category</span>
-              <div className={`p-4 rounded-2xl font-bold text-sm ${isDarkMode ? 'bg-dark-800/60 border border-dark-750 text-white' : 'bg-gray-50/50 border border-gray-100 text-gray-800'}`}>
-                {request.category || '—'}
-              </div>
-            </div>
-            <div className="space-y-1">
-              <span className="text-[10px] font-black uppercase tracking-widest text-gray-400 block px-1">Request Type</span>
-              <div className={`p-4 rounded-2xl font-bold text-sm ${isDarkMode ? 'bg-dark-800/60 border border-dark-750 text-white' : 'bg-gray-50/50 border border-gray-100 text-gray-800'}`}>
-                {request.requestType || '—'}
-              </div>
-            </div>
-          </div>
-
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-1">
-              <span className="text-[10px] font-black uppercase tracking-widest text-gray-400 block px-1">Values Count</span>
-              <div className={`p-4 rounded-2xl font-bold text-sm ${isDarkMode ? 'bg-dark-800/60 border border-dark-750 text-white' : 'bg-gray-50/50 border border-gray-100 text-gray-800'}`}>
-                {request.valuesCount?.toLocaleString() ?? 0}
-              </div>
-            </div>
-            <div className="space-y-1">
-              <span className="text-[10px] font-black uppercase tracking-widest text-gray-400 block px-1">Assignee / Owner</span>
-              <div className={`p-4 rounded-2xl font-bold text-sm ${isDarkMode ? 'bg-dark-800/60 border border-dark-750 text-white' : 'bg-gray-50/50 border border-gray-100 text-gray-800'}`}>
-                {request.owner || 'Unassigned'}
-              </div>
-            </div>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="space-y-1">
-              <span className="text-[10px] font-black uppercase tracking-widest text-gray-400 block px-1">Briefing Reference</span>
-              <div className={`p-4 rounded-2xl font-bold text-sm h-full flex items-center justify-between ${isDarkMode ? 'bg-dark-800/60 border border-dark-750' : 'bg-gray-50/50 border border-gray-100'}`}>
-                {request.brief ? (
-                  <a 
-                    href={request.brief} 
-                    target="_blank" 
-                    rel="noopener noreferrer" 
-                    className="text-[#FE5900] font-bold hover:underline inline-flex items-center gap-1.5 max-w-full overflow-hidden text-ellipsis whitespace-nowrap"
-                  >
-                    View Brief Document <ExternalLink size={14} className="shrink-0" />
-                  </a>
-                ) : (
-                  <span className="text-gray-400 italic">No brief document attached</span>
-                )}
-              </div>
-            </div>
-            <div className="space-y-1">
-              <span className={`text-[10px] font-black uppercase tracking-widest block px-1 flex items-center gap-1.5 ${
-                isSlaWarning 
-                  ? 'text-amber-500' 
-                  : 'text-[#FE5900]'
-              }`}>
-                <Clock size={12} /> SLA Target Deadline
-              </span>
-              <div className={`p-4 rounded-2xl font-bold text-sm flex flex-col sm:flex-row sm:items-center justify-between gap-2 border ${
-                isSlaWarning 
-                  ? (isDarkMode ? 'bg-amber-500/5 border-amber-500/30 text-amber-400 shadow-[0_0_15px_rgba(245,158,11,0.05)]' : 'bg-amber-50 border-amber-200 text-amber-700')
-                  : (isDarkMode ? 'bg-dark-800/60 border border-dark-750 text-white' : 'bg-orange-500/[0.01]/50 border-gray-100 text-gray-900')
-              }`}>
-                <span>{formatDate(request.slaDeadline)}</span>
-                {isSlaWarning && (
-                  <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-black uppercase tracking-wider border shadow-sm animate-pulse ${
-                    isDarkMode
-                      ? 'bg-amber-500/10 text-amber-450 border-amber-500/20'
-                      : 'bg-amber-100/60 text-amber-800 border-amber-300'
-                  }`}>
-                    ⚠️ {hoursRemaining}h remaining
-                  </span>
-                )}
-              </div>
-            </div>
-            <div className="space-y-1">
-              <span className="text-[10px] font-black uppercase tracking-widest text-gray-400 block px-1 flex items-center gap-1.5">
-                <CheckCircle2 size={12} /> Req. Actions Completion
-              </span>
-              <div className={`p-4 rounded-2xl font-bold text-sm flex items-center justify-between gap-2 border ${
-                reqActionsDoneAt
-                  ? (isDarkMode ? 'bg-emerald-500/5 border-emerald-500/30 text-emerald-400' : 'bg-emerald-50 border-emerald-200 text-emerald-700')
-                  : (isDarkMode ? 'bg-dark-800/60 border border-dark-750 text-gray-400' : 'bg-gray-50/50 border-gray-100 text-gray-400')
-              }`}>
-                <span>{reqActionsDoneAt ? formatDate(request.requestActionsCompletedAt!) : 'Not completed yet'}</span>
-                {reqActionsDoneAt && (
-                  <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-black uppercase tracking-wider border shadow-sm ${
-                    isDarkMode ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20' : 'bg-emerald-100/60 text-emerald-800 border-emerald-300'
-                  }`}>
-                    ✓ SLA Paused
-                  </span>
-                )}
-              </div>
-            </div>
-          </div>
-
-          <div className="space-y-1">
+          <div className="md:col-span-2 space-y-1">
             <span className="text-[10px] font-black uppercase tracking-widest text-gray-400 block px-1">Discussion & Feedback</span>
-            <button 
+            <button
               onClick={() => {
                 onOpenComments(request.id);
               }}
